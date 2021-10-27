@@ -1,5 +1,4 @@
 import datetime
-import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -39,13 +38,24 @@ class Generator(nn.Module):
 
 
 # Hyperparameters etc.
-gpu_ids = [2, 3]
+# to finish one epoch, more GPU will use more time.
+#   1 GPU: 17 seconds
+#   2 GPU: 44 seconds
+#   4 GPU: 59 seconds
+gpu_ids = [3]
 device = f"cuda:{gpu_ids[0]}" if torch.cuda.is_available() else "cpu"
 lr = 3e-4
 z_dim = 64
 image_dim = 28 * 28 * 1  # 784
-batch_size = 1024
+batch_size = 32
 num_epochs = 100
+print(f"gpu_ids   : {gpu_ids}")
+print(f"device    : {device}")
+print(f"lr        : {lr}")
+print(f"z_dim     : {z_dim}")
+print(f"image_dim : {image_dim}")
+print(f"batch_size: {batch_size}")
+print(f"num_epochs: {num_epochs}")
 
 disc = Discriminator(image_dim)
 genr = Generator(z_dim, image_dim)
@@ -98,8 +108,7 @@ def run_epoch_batch(epoch, batch_idx, real):
     opt_genr.step()
 
     if batch_idx == 0:
-        now = time.time() + 60 * 60 * 8  # seconds. change timezone to UTC+08:00
-        dtstr = datetime.datetime.utcfromtimestamp(now).strftime("%Y-%m-%d %H:%M:%S")
+        dtstr = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"{dtstr} E[{epoch}/{num_epochs}] B[{batch_idx}] LossD:{lossD:.4f} lossG:{lossG:.4f}")
         with torch.no_grad():
             fake = genr(fino).reshape(-1, 1, 28, 28)
